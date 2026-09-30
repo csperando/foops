@@ -1,19 +1,28 @@
-# Multi-Monitor Detection Tests
+# Spoof Detection
 
-[https://csperando.github.io/watcher/](https://csperando.github.io/watcher/)
+Disclaimer, fraud detection is tricky. A determined attacker will be able to bypass these checks with enough effort. However, this still provides better detection capabilities than other publicly available detection tests.
+
+We currently offer the following services:
+- Multi-Monitor Detection
+- Virtual Webcam Detection
+
+
+## Multi-Monitor Detection Tests
+
+[https://csperando.github.io/foops/](https://csperando.github.io/foops/)
 
 This application consists of eight separate tests aimed at reproducing 
 how a website can detect a second display, usually without 
 asking for any permission. A summary of the implementation 
 for each of the eight methods is provided below.
 
-## 1. `screen.isExtended`
+### 1. `screen.isExtended`
 
 A boolean on `window.screen` that reports whether the display setup is
 extended across multiple screens. No permission prompt required — this is
 almost certainly what most sites use, and is likely what tipped you off.
 
-## 2. `getScreenDetails()`
+### 2. `getScreenDetails()`
 
 The full Window Management API. Returns an array of every connected screen
 with size, position, and primary/internal flags. Requires a user gesture and
@@ -31,25 +40,25 @@ getter goes through the same two-part native check as method 6. A spoof that
 swaps the name for a plausible one (e.g. "Generic PnP Monitor") shows up as
 "label spoofed", and so does a `label` shadowed on a screen object.
 
-## 3. Permissions API state (no prompt)
+### 3. Permissions API state (no prompt)
 
 `navigator.permissions.query({ name: "window-management" })` silently reveals
 whether that permission is already granted, denied, or unset — without ever
 showing a dialog. A prior grant lets a site skip straight to method 2.
 
-## 4. Heuristic: `screen.availLeft` / `availTop`
+### 4. Heuristic: `screen.availLeft` / `availTop`
 
 Non-standard but long-supported properties. A non-zero value suggests a
 display positioned to the left of or above the primary one — a hint of a
 multi-monitor layout with zero permissions involved.
 
-## 5. Heuristic: window position vs. screen bounds
+### 5. Heuristic: window position vs. screen bounds
 
 Polls `window.screenX`/`screenY` against `screen.width`/`height`. If the
 window is ever positioned or dragged outside the primary screen's bounds,
 another display must exist.
 
-## 6. Tamper / spoof detection for `isExtended`
+### 6. Tamper / spoof detection for `isExtended`
 
 Users and privacy tools (e.g. Brave, hardened browsers, anti-fingerprinting
 extensions) can override `isExtended` to always report `false`. This method
@@ -80,7 +89,7 @@ does, as the test VM showed) patches that iframe too. Watcher then reports
 "reference tampered", because nothing else puts code into a blank iframe the
 page just created.
 
-## 7. Hardware signal: display refresh-rate (vsync) timing
+### 7. Hardware signal: display refresh-rate (vsync) timing
 
 Counts `requestAnimationFrame` callbacks over a fixed window to measure the
 monitor's actual refresh rate from real vsync timing, rather than an
@@ -90,7 +99,7 @@ physical screen with a different refresh rate. Grounded in real hardware
 timing rather than a settable property, so it's harder to convincingly spoof
 than methods 1–6.
 
-## 8. Context signal: is this even physical hardware?
+### 8. Context signal: is this even physical hardware?
 
 Reads the WebGL renderer/vendor strings, which often name the virtual GPU
 driver in a VM (VMware SVGA3D, VirtualBox, Hyper-V) or a software renderer
@@ -148,7 +157,7 @@ than a real vsync signal.
 
 ---
 
-# Phony Webcam Detection Tests
+## Phony Webcam Detection Tests
 
 `webcam.html` applies the same approach to cameras: it tries to tell a real
 physical webcam from a phony one. Phony here means a virtual camera driver
@@ -176,20 +185,20 @@ underneath.
 4. Otherwise the page tallies strong and weak flags from methods 3–8 and
    10–11.
 
-## 1. Permissions API state (`camera`)
+### 1. Permissions API state (`camera`)
 
 `navigator.permissions.query({ name: "camera" })` reveals whether camera
 access is granted, denied or unset, without a prompt. Shares
 `checkPermissionState()` with the monitor page's method 3.
 
-## 2. Device inventory (`enumerateDevices()`)
+### 2. Device inventory (`enumerateDevices()`)
 
 Counts video inputs. More than one camera is a weak hint, because a virtual
 camera usually sits next to the real one. Before permission, browsers may
 cap the list at one device per kind and hide labels. Updates live on
 `devicechange`.
 
-## 3. Camera API integrity
+### 3. Camera API integrity
 
 Compares 15 APIs against their pristine-realm copies, using the same
 `isNativeFunction()` helper as monitor method 6:
@@ -215,7 +224,7 @@ track comes from a real device: canvas tracks (`requestFrame`/`canvas`) and
 deviceIds missing from `enumerateDevices()` are flagged. This catches
 script injection, not driver-level virtual cameras.
 
-## 4. Camera label hints + USB ID
+### 4. Camera label hints + USB ID
 
 Substring-matches the active camera's label against default virtual-camera
 names (`VIRTUAL_CAM_HINTS`). A virtual camera that is installed but not in
@@ -228,7 +237,7 @@ missing ID is a weak flag only when another camera on the same system *does*
 have one. Built-in MIPI cameras (e.g. Surface) have no USB ID either, which
 is why it stays weak.
 
-## 5. Hardware shape: `getCapabilities()` + `groupId`
+### 5. Hardware shape: `getCapabilities()` + `groupId`
 
 Real UVC webcams expose sensor controls (exposure, white balance,
 brightness, focus, zoom…). A webcam with a built-in mic shares a `groupId`
@@ -236,7 +245,7 @@ with its audio input. Virtual cameras usually expose neither. If the browser
 exposes no such controls at all (mostly outside Chromium), the card reports
 "browser limited" rather than a flag.
 
-## 6. Control response
+### 6. Control response
 
 Method 5 reads what the camera *claims*. This drives the first available
 of `brightness`, `exposureCompensation` or `exposureTime` to its minimum and
@@ -248,13 +257,13 @@ capability is advertised, not real. A silently ignored change or an error
 is weak. It runs after the frame sample (methods 7–8), since it
 deliberately changes the picture.
 
-## 7. Frame timing
+### 7. Frame timing
 
 Uses `requestVideoFrameCallback` to read each frame's `captureTime`, falling
 back to `mediaTime`, over 5 s. A near-zero coefficient of variation in frame
 intervals suggests a software render loop. This is only ever a weak flag.
 
-## 8. Pixel noise / frozen / looped feed
+### 8. Pixel noise / frozen / looped feed
 
 Compares the same sampled frames (160×120 grayscale):
 - **Frozen.** A real sensor never produces two bit-identical frames; a
@@ -273,7 +282,7 @@ Compares the same sampled frames (160×120 grayscale):
 
 Near-black frames (a covered lens) are not judged.
 
-## 9. Challenge: screen-flash reflection
+### 9. Challenge: screen-flash reflection
 
 Flashes the screen through a random red/green/blue sequence (500 ms per
 color, under the WCAG three-flashes-per-second limit). It then correlates
@@ -293,7 +302,7 @@ A recorded or synthetic feed can't follow the sequence, because it's chosen
 at runtime. An opt-in checkbox re-runs the test at random 1–3 minute
 intervals.
 
-## 10. Cross-check: consistency
+### 10. Cross-check: consistency
 
 Independent readings of the same camera should agree:
 - reported vs. actual frame size;
@@ -304,7 +313,7 @@ Independent readings of the same camera should agree:
 
 One mismatch is weak, and two or more are strong.
 
-## 11. Session monitor
+### 11. Session monitor
 
 The other cards check once. This keeps watching for the rest of the session:
 - **Every frame is hashed** (a 16×12 thumbnail, ~53-bit hash). A frame that
@@ -318,7 +327,7 @@ The other cards check once. This keeps watching for the rest of the session:
 
 Loops and freezes are strong flags; the rest are weak.
 
-## 12. Context: VM signal
+### 12. Context: VM signal
 
 The monitor page's method 8, reused unchanged. Inside a VM or remote session
 the camera is redirected or emulated, so treat the sensor cards with
