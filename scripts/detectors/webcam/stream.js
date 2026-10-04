@@ -6,7 +6,7 @@
 // (pristine.js), so a script that replaced getUserMedia, getImageData, etc.
 // on this page can't feed our analysis. Card 3 still flags the override;
 // we just don't let it steer the measurements.
-import { getPristine, createPristineCanvas } from "../pristine.js";
+import { getPristine, createPristineCanvas } from "../../integrity/pristine.js";
 
 let stream = null;
 

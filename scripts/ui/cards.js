@@ -1,109 +1,63 @@
-import { $, setBadge, renderCard } from "./dom.js";
+import { $, setBadge } from "./dom.js";
+import { renderHero } from "./hero.js";
+import { renderRawDiagnostics } from "./raw.js";
 import {
-    isScreenDetailsSupported,
-    requestScreenDetails,
-    shapeScreens,
-    shapeScreensLive,
-    detectLabelHints,
-    checkLabelGetter
-} from "../detectors/screenDetails.js";
-import { checkPermissionState } from "../detectors/permissions.js";
-import { detectAvailHeuristic } from "../detectors/availHeuristic.js";
-import { detectDragHeuristic } from "../detectors/dragHeuristic.js";
-import { detectIntegrity } from "../detectors/integrityCheck.js";
-import { detectRefreshRate, isMeasuringRefresh } from "../detectors/refreshRate.js";
-import { detectVmSignal } from "../detectors/vmSignal.js";
+    renderView,
+    presentIsExtended,
+    presentScreenDetails,
+    presentPermission,
+    presentAvailOffset,
+    presentWindowPosition,
+    presentIntegrity,
+    presentRefreshRate,
+    presentVirtualization,
+    presentEmbedding
+} from "./present.js";
 
-// ---------- 1. screen.isExtended ----------
-export function renderIsExtendedCard(result) {
-    return renderCard("badge-isExtended", "out-isExtended", result);
-}
+// ---------- monitor.html cards ----------
+// Which card each signal feeds. Some cards show several signals.
+const CARDS = {
+    isExtended: (s) => {
+        renderHero(s.isExtended);
+        renderView("badge-isExtended", "out-isExtended", presentIsExtended(s.isExtended));
+        renderRawDiagnostics();
+    },
+    screenDetails: (s) => renderView("badge-details", "out-details", presentScreenDetails({
+        details: s.screenDetails,
+        labels: s.screenLabels,
+        labelIntegrity: s.screenLabelIntegrity
+    })),
+    permission: (s) => renderView("badge-perm", "out-perm", presentPermission(s.permission)),
+    availOffset: (s) => renderView("badge-avail", "out-avail", presentAvailOffset(s.availOffset)),
+    windowPosition: (s) => renderView("badge-drag", "out-drag", presentWindowPosition(s.windowPosition)),
+    integrity: (s) => renderView("badge-integrity", "out-integrity", presentIntegrity({
+        integrity: s.isExtendedIntegrity,
+        consistency: s.isExtendedConsistency
+    })),
+    refreshRate: (s) => renderView("badge-refresh", "out-refresh", presentRefreshRate(s.refreshRate)),
+    virtualization: (s) => renderView("badge-vm", "out-vm", presentVirtualization(s.virtualization)),
+    embedding: (s) => renderView("badge-embedding", "out-embedding", presentEmbedding(s.embedding))
+};
 
-// ---------- 2. getScreenDetails() ----------
-export function initScreenDetailsCard() {
-    $("btn-details").addEventListener("click", async () => {
-        const badge = $("badge-details");
-        const out = $("out-details");
-        const btn = $("btn-details");
-        btn.disabled = true;
+// Signals that share a card, and the signals each card needs before it renders.
+const CARD_FOR = {
+    screenLabels: "screenDetails",
+    screenLabelIntegrity: "screenDetails",
+    isExtendedIntegrity: "integrity",
+    isExtendedConsistency: "integrity"
+};
+const NEEDS = {
+    integrity: ["isExtendedIntegrity", "isExtendedConsistency"]
+};
 
-        if (!isScreenDetailsSupported()) {
-            setBadge(badge, "unknown", "unsupported");
-            out.textContent = "getScreenDetails() is not available in this browser.";
-            btn.disabled = false;
-            return;
-        }
-
-        try {
-            const details = await requestScreenDetails();
-            const screens = shapeScreens(details.screens);
-            const multi = screens.length > 1;
-            const hints = detectLabelHints(screens);
-            const labelIntegrity = checkLabelGetter(details.screens);
-            const labelSpoofed = !!(labelIntegrity && labelIntegrity.spoofed);
-            setBadge(
-                badge,
-                labelSpoofed || hints.anyHint ? "warn" : (multi ? "yes" : "no"),
-                labelSpoofed ? "label spoofed" : hints.anyHint ? "vm label found" : (multi ? `${screens.length} screens` : "1 screen")
-            );
-            out.textContent = JSON.stringify({ screens, vmLabelHint: hints.anyHint ? hints.matches : null, labelIntegrity }, null, 2);
-
-            details.addEventListener("screenschange", () => {
-                const liveScreens = shapeScreensLive(details.screens);
-                const liveHints = detectLabelHints(liveScreens);
-                const liveIntegrity = checkLabelGetter(details.screens);
-                const liveSpoofed = !!(liveIntegrity && liveIntegrity.spoofed);
-                out.textContent = JSON.stringify({ screens: liveScreens, vmLabelHint: liveHints.anyHint ? liveHints.matches : null, labelIntegrity: liveIntegrity }, null, 2);
-                setBadge(
-                    badge,
-                    liveSpoofed || liveHints.anyHint ? "warn" : (details.screens.length > 1 ? "yes" : "no"),
-                    liveSpoofed ? "label spoofed" : liveHints.anyHint ? "vm label found" : `${details.screens.length} screens (live)`
-                );
-            });
-        } catch (err) {
-            setBadge(badge, "warn", "denied/error");
-            out.textContent = "Permission denied or error: " + err.message;
-        } finally {
-            btn.disabled = false;
-        }
-    });
-}
-
-// ---------- 3. Permissions API ----------
-export async function renderPermissionsCard() {
-    const { status, result } = await checkPermissionState();
-    renderCard("badge-perm", "out-perm", result);
-    if (status) {
-        status.onchange = renderPermissionsCard;
+export function renderSignals(signals, ids) {
+    const cards = new Set(ids.map((id) => CARD_FOR[id] || id));
+    for (const card of cards) {
+        if ((NEEDS[card] || [card]).every((id) => signals[id])) CARDS[card](signals);
     }
 }
 
-// ---------- 4. availLeft/availTop heuristic ----------
-export function renderAvailCard() {
-    return renderCard("badge-avail", "out-avail", detectAvailHeuristic());
-}
-
-// ---------- 5. Drag / position heuristic ----------
-export function renderDragCard() {
-    return renderCard("badge-drag", "out-drag", detectDragHeuristic());
-}
-
-// ---------- 6. Tamper / spoof detection for isExtended ----------
-export function renderIntegrityCard({ availOffsetDetected, dragMultiDetected }) {
-    return renderCard("badge-integrity", "out-integrity", detectIntegrity({ availOffsetDetected, dragMultiDetected }));
-}
-
-// ---------- 7. Hardware refresh-rate (vsync) timing ----------
-export async function renderRefreshCard() {
-    if (isMeasuringRefresh()) return;
-    setBadge($("badge-refresh"), "unknown", "measuring");
-
-    const result = await detectRefreshRate();
-    if (!result) return;
-    renderCard("badge-refresh", "out-refresh", result);
-}
-
-// ---------- 8. VM / virtualization context signal ----------
-export function renderVmCard() {
-    return renderCard("badge-vm", "out-vm", detectVmSignal());
+// ---------- Async checks in flight ----------
+export function renderPending(id) {
+    if (id === "refreshRate") setBadge($("badge-refresh"), "unknown", "measuring");
 }

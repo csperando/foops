@@ -1,5 +1,5 @@
 // ---------- Permissions API (no prompt) ----------
-// Shared by method 3 ("window-management") and the webcam page ("camera").
+// Used by the webcam page ("camera"); the monitor uses monitor/probes/permission.js.
 export async function checkPermissionState(name = "window-management") {
     if (!navigator.permissions || !navigator.permissions.query) {
         return {

@@ -9,15 +9,32 @@
 //
 // The iframe stays attached: a detached realm's functions can throw.
 // Not bulletproof — an extension injecting into about:blank frames
-// (match_about_blank / all_frames), a DevTools-driven tool using
-// Page.addScriptToEvaluateOnNewDocument (confirmed in the test VM: it runs
-// in this iframe too), or a page script hooking iframe creation can reach
-// this realm. So the references themselves are verified with the
+// (match_about_blank / all_frames), automation that injects a script into
+// every new frame, or a page script hooking iframe creation can reach this
+// realm. So the references themselves are verified with the
 // toString-independent stack probe (see tamperedPristineReferences() in
 // nativeCode.js), and the iframe-creation hooks (createElement, appendChild,
 // contentWindow) are in the webcam page's checked list.
 let frame = null;
 let cached;
+let holders = 0;
+
+// Sessions hold the realm while they run: retain on start (which also
+// creates it as early as possible), release on stop. The iframe is removed
+// when the last holder releases it; the next getPristine() makes a new one.
+export function retainPristine() {
+    holders++;
+    getPristine();
+}
+
+export function releasePristine() {
+    if (holders === 0) return;
+    holders--;
+    if (holders > 0) return;
+    if (frame) frame.remove();
+    frame = null;
+    cached = undefined;
+}
 
 function getter(proto, name) {
     const descriptor = proto && Object.getOwnPropertyDescriptor(proto, name);

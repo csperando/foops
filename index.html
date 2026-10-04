@@ -10,45 +10,79 @@
     <body>
 
     <header>
-    <h1>Demo</h1>
+    <h1>foops demo</h1>
     <p>
-        Todo
+        A remote-interview style session with the <code>foops.monitor</code> library: start a session,
+        move the window around or plug in a display, and watch the signals and timeline. The report at
+        the bottom is what a platform would send to its server to re-score.
     </p>
     </header>
 
     <div class="hero">
         <div>
-            <div class="hero-label">Overall verdict</div>
-            <div class="hero-verdict unknown" id="hero-verdict">Checking&hellip;</div>
-            <div class="hero-sub" id="hero-sub">Based on the strongest signal available in this browser.</div>
+            <div class="hero-label">Verdict</div>
+            <div class="hero-verdict unknown" id="hero-verdict">Not started</div>
+            <div class="hero-sub" id="hero-sub">Press Start to begin a session.</div>
         </div>
-        <div class="hero-count" id="hero-count">
-            <!--
-                &mdash;
-                <small>screens (if known)</small>
-            -->
-        </div>
+        <div class="hero-count" id="hero-count"></div>
     </div>
 
     <main>
 
     <section class="card">
         <div class="card-head">
-        <h2 class="card-title">Library output &mdash; <code>foops.monitor</code></h2>
-        <span class="badge unknown" id="badge-lib">watching</span>
+        <h2 class="card-title">Session</h2>
+        <span class="badge unknown" id="badge-session">idle</span>
         </div>
         <p class="card-desc">
-        The latest summary from <code>foops.monitor.watch()</code>. Checking screen details asks
-        for the window-management permission, so it only runs when you click.
+        One session per interview. <b>Reset</b> clears the timeline and what the observers remember;
+        <b>Check screen details</b> asks for the window-management permission, so it only runs when you click.
         </p>
-        <button id="btn-details">Check screen details&hellip;</button>
-        <pre id="out-lib"></pre>
+        <button id="btn-start">Start</button>
+        <button id="btn-stop" disabled>Stop</button>
+        <button id="btn-reset" disabled>Reset</button>
+        <button id="btn-details" disabled>Check screen details&hellip;</button>
+    </section>
+
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">Signals</h2>
+        </div>
+        <p class="card-desc">
+        Every check's latest result: what kind of signal it is, its outcome and how much weight it carries.
+        </p>
+        <pre id="out-signals"></pre>
+    </section>
+
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">Timeline</h2>
+        </div>
+        <p class="card-desc">
+        Every outcome change since the session started, including the verdict.
+        </p>
+        <pre id="out-timeline"></pre>
+    </section>
+
+    <section class="card wide">
+        <div class="card-head">
+        <h2 class="card-title">Report</h2>
+        </div>
+        <p class="card-desc">
+        Plain JSON. Don't trust its verdict on the server &mdash; score it there with
+        <code>rescore()</code> from <code>foops/server</code>.
+        Library loaded from: <code id="lib-source">&hellip;</code> (add <code>?dist</code> to the URL to use the built bundle).
+        </p>
+        <pre id="out-report"></pre>
     </section>
 
     </main>
 
     <script type="module">
-        import { monitor } from "./scripts/lib/index.js";
+        // ?dist loads the built bundle instead of the source, to test a release build.
+        const useDist = new URLSearchParams(location.search).has("dist");
+        const { monitor } = await import(useDist ? "./dist/foops.esm.js" : "./scripts/lib/index.js");
+        document.getElementById("lib-source").textContent = useDist ? "dist/foops.esm.js" : "source";
 
         const $ = (id) => document.getElementById(id);
         const HERO = {
@@ -56,30 +90,63 @@
             single: { text: "Single display", state: "no" },
             unknown: { text: "Unknown", state: "unknown" }
         };
-        const output = { watch: null, screenDetails: null };
+        let session = null;
 
-        function render() {
-            $("out-lib").textContent = JSON.stringify(output, null, 2);
-        }
+        const time = (t) => new Date(t).toLocaleTimeString();
+        const pad = (s, n) => String(s).padEnd(n);
 
-        function renderVerdict({ verdict }) {
-            const hero = HERO[verdict];
+        function render(report) {
+            const hero = HERO[report.verdict] || HERO.unknown;
             $("hero-verdict").textContent = hero.text;
             $("hero-verdict").className = "hero-verdict " + hero.state;
-            $("hero-sub").textContent = "Source: foops.monitor.watch()";
-            $("badge-lib").className = "badge " + hero.state;
-            $("badge-lib").textContent = verdict;
-            output.watch = { verdict };
-            render();
+            $("hero-count").innerHTML = `${report.timeline.length}<small>timeline entries</small>`;
+
+            $("out-signals").textContent = Object.values(report.signals)
+                .map((s) => `${pad(s.id, 22)}${pad(s.kind, 11)}${s.supported ? s.outcome + (s.strength ? ` (${s.strength})` : "") : "unsupported"}`)
+                .join("\n");
+            $("out-timeline").textContent = report.timeline
+                .map((e) => `${time(e.t)}  ${pad(e.id, 22)}${e.supported === false ? "unsupported" : e.outcome}`)
+                .join("\n");
+            $("out-report").textContent = JSON.stringify(report, null, 2);
         }
 
-        monitor.watch(renderVerdict);
+        function setState(state) {
+            const running = state === "running";
+            $("badge-session").className = "badge " + (running ? "yes" : "unknown");
+            $("badge-session").textContent = state;
+            $("btn-start").disabled = running;
+            $("btn-stop").disabled = !running;
+            $("btn-reset").disabled = !running;
+            $("btn-details").disabled = !running;
+            $("hero-sub").textContent = running
+                ? "Live: updates as the session sees changes."
+                : "Stopped: this is the final report.";
+        }
+
+        $("btn-start").addEventListener("click", async () => {
+            session = monitor.createSession();
+            session.on("update", render);
+            setState("running");
+            render(await session.start());
+        });
+
+        $("btn-stop").addEventListener("click", () => {
+            render(session.stop());
+            setState("stopped");
+        });
+
+        $("btn-reset").addEventListener("click", () => {
+            session.reset();
+            render(session.report());
+        });
 
         $("btn-details").addEventListener("click", async () => {
             $("btn-details").disabled = true;
-            output.screenDetails = await monitor.screenDetails();
-            render();
-            $("btn-details").disabled = false;
+            try {
+                render(await session.screenDetails());
+            } finally {
+                $("btn-details").disabled = session.state !== "running";
+            }
         });
     </script>
 

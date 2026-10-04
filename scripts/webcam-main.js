@@ -19,7 +19,7 @@ import {
 import {
     isCameraSupported, startCamera, getVideoTrack, listDevices, sampleFrames, trackSettings, trackLabel
 } from "./detectors/webcam/stream.js";
-import { getPristine } from "./detectors/pristine.js";
+import { getPristine } from "./integrity/pristine.js";
 import { analyzeFrameTiming } from "./detectors/webcam/frameTiming.js";
 import { analyzePixelNoise } from "./detectors/webcam/pixelNoise.js";
 import { runControlResponse } from "./detectors/webcam/controlResponse.js";

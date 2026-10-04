@@ -58,7 +58,7 @@
         The full API. Returns every connected screen with position, size and primary/internal
         flags &mdash; but <em>does</em> require a user gesture and a permission grant. Each
         screen's <code>label</code> is also checked against the same virtualization hints as
-        method 8 (e.g. this VM reports "VBOX monitor").
+        method 8 (virtual machines often name their virtual display).
         </p>
         <button id="btn-details">Request screen details&hellip;</button>
         <pre id="out-details">(not requested yet)</pre>
@@ -153,6 +153,21 @@
         whatever the hypervisor is configured to present.
         </p>
         <pre id="out-vm"></pre>
+    </section>
+
+    <!-- 9. Embedding context -->
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">9. Context signal: is this page embedded?</h2>
+        <span class="badge unknown" id="badge-embedding">checking</span>
+        </div>
+        <p class="card-desc">
+        Checks whether the page runs inside a frame, and whether the Window Management API is
+        allowed there. A cross-origin iframe without <code>allow="window-management"</code> is denied
+        it, yet <code>screen.isExtended</code> still returns a boolean &mdash; so method 1 reports
+        itself as blocked rather than trusting that value.
+        </p>
+        <pre id="out-embedding"></pre>
     </section>
 
     </main>

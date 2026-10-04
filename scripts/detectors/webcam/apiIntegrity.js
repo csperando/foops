@@ -5,9 +5,9 @@
 // detector like this one reads pixels through. Driver-level virtual cameras
 // (OBS etc.) go through the genuine native API, so they pass this card —
 // the other cards exist for those.
-import { isNativeFunction, isToStringPatched, tamperedPristineReferences } from "../nativeCode.js";
-import { getPristine } from "../pristine.js";
-import { probe, stackTampering } from "../stackProbe.js";
+import { isNativeFunction, isToStringPatched, tamperedPristineReferences } from "../../integrity/nativeCode.js";
+import { getPristine } from "../../integrity/pristine.js";
+import { probe, stackTampering } from "../../integrity/stackProbe.js";
 import { trackSettings } from "./stream.js";
 
 function getter(proto, name) {

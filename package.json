@@ -1,0 +1,44 @@
+{
+  "name": "foops",
+  "version": "0.1.0",
+  "description": "Detect multiple monitors and spoofed display APIs in the browser, with reports you re-score on your server.",
+  "license": "MIT",
+  "author": "csperando",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/csperando/foops.git"
+  },
+  "homepage": "https://csperando.github.io/foops/",
+  "bugs": {
+    "url": "https://github.com/csperando/foops/issues"
+  },
+  "keywords": [
+    "multi-monitor",
+    "screen",
+    "proctoring",
+    "interview",
+    "spoof-detection",
+    "window-management"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": "./dist/foops.esm.js",
+    "./server": "./dist/server.js",
+    "./package.json": "./package.json"
+  },
+  "module": "./dist/foops.esm.js",
+  "unpkg": "./dist/foops.min.js",
+  "jsdelivr": "./dist/foops.min.js",
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test",
+    "prepublishOnly": "npm test && npm run build"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>foops host: wrapped built-ins</title>
+        <!--
+            Real app pages aren't clean: framework and monitoring scripts wrap
+            built-ins before foops runs. This page mimics what two common ones
+            do, without depending on them, and shows how the integrity checks
+            read. Open it from a local server at the repo root:
+                test/hosts/wrapped.html?wrap=none|zone|sentry|both
+
+            Expected: never "tampered". With zone or sentry, isExtendedIntegrity
+            reports reason "tostring-patched" (both libraries replace
+            Function.prototype.toString); the getter stays native and the
+            pristine references stay untouched.
+        -->
+        <script>
+            (function () {
+                const wrap = new URLSearchParams(location.search).get("wrap") || "none";
+                const nativeToString = Function.prototype.toString;
+
+                // zone.js (Angular): wraps timers, rAF, event listeners and
+                // Promise, and patches Function.prototype.toString so its
+                // wrappers still stringify as the native originals.
+                if (wrap === "zone" || wrap === "both") {
+                    const originals = new WeakMap();
+                    const patch = (obj, name) => {
+                        const original = obj[name];
+                        const wrapper = function () { return Reflect.apply(original, this, arguments); };
+                        originals.set(wrapper, original);
+                        obj[name] = wrapper;
+                    };
+                    patch(window, "setTimeout");
+                    patch(window, "setInterval");
+                    patch(window, "requestAnimationFrame");
+                    patch(EventTarget.prototype, "addEventListener");
+                    patch(EventTarget.prototype, "removeEventListener");
+                    window.Promise = class ZoneAwarePromise extends Promise {};
+                    const toString = Function.prototype.toString;
+                    Function.prototype.toString = function toString() {
+                        return Reflect.apply(toString, originals.get(this) || this, arguments);
+                    };
+                }
+
+                // Sentry: fills timers, rAF and event listeners, marking each
+                // wrapper with __sentry_original__, and its default
+                // FunctionToString integration patches toString the same way.
+                if (wrap === "sentry" || wrap === "both") {
+                    const fill = (obj, name) => {
+                        const original = obj[name];
+                        const wrapped = function () { return Reflect.apply(original, this, arguments); };
+                        wrapped.__sentry_original__ = original;
+                        obj[name] = wrapped;
+                    };
+                    fill(window, "setTimeout");
+                    fill(window, "setInterval");
+                    fill(window, "requestAnimationFrame");
+                    fill(EventTarget.prototype, "addEventListener");
+                    const toString = Function.prototype.toString;
+                    Function.prototype.toString = function () {
+                        return Reflect.apply(toString, this.__sentry_original__ || this, arguments);
+                    };
+                }
+
+                window.__wrap = wrap;
+                window.__nativeToString = nativeToString;
+            })();
+        </script>
+    </head>
+    <body>
+        <h1>Wrapped built-ins: <span id="wrap"></span></h1>
+        <pre id="out-host">running</pre>
+        <script type="module">
+            import { monitor } from "../../scripts/lib/index.js";
+
+            document.getElementById("wrap").textContent = window.__wrap;
+            const report = await monitor.run({ cadence: { refreshTimeoutMs: 1500 } });
+            const integrity = report.signals.isExtendedIntegrity;
+            const summary = {
+                wrap: window.__wrap,
+                verdict: report.verdict,
+                isExtendedIntegrity: integrity.outcome,
+                reason: integrity.data.reason,
+                getterNative: integrity.data.getterNative,
+                pristineTampered: integrity.data.pristineTampered,
+                refreshRate: report.signals.refreshRate ? report.signals.refreshRate.outcome : "timed out",
+                iframesLeft: document.querySelectorAll("iframe").length
+            };
+            document.getElementById("out-host").textContent = JSON.stringify(summary, null, 2);
+        </script>
+    </body>
+</html>

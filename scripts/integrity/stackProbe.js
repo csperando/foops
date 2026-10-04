@@ -1,8 +1,7 @@
 // ---------- Stack-trace probe ----------
 // A second native-code check that doesn't rely on Function.prototype.toString
 // at all, for when even the pristine iframe realm can't be trusted (a
-// script injected into every new frame — e.g. via DevTools'
-// Page.addScriptToEvaluateOnNewDocument — patches that realm too).
+// script injected into every new frame patches that realm too).
 //
 // Calls the function on an illegal receiver (a plain object). A native
 // browser function rejects that brand check inside native code, so the
@@ -16,17 +15,25 @@
 //
 // An attacker can still filter stack traces (Error.prepareStackTrace) or
 // hide them (Error.stackTraceLimit), so stackTampering() reports those.
-const OWN_URL = import.meta.url;
+//
+// Our own frame is found by a marker function name, not by this module's
+// URL: bundlers rewrite import.meta.url (webpack bakes in a build-time
+// file:// path) or drop it (IIFE builds), and anything bundled into the
+// same file would share it. The name is a string-literal key, which
+// minifiers don't rename.
+const MARKER = "foopsStackProbe$boundary";
 const JS_FRAME = /:\d+:\d+\)?\s*$/;
 const ILLEGAL_RECEIVER = Object.freeze({});
 
-function invoke(fn) {
-    return Reflect.apply(fn, ILLEGAL_RECEIVER, []);
-}
+const invoke = {
+    [MARKER](fn) {
+        return Reflect.apply(fn, ILLEGAL_RECEIVER, []);
+    }
+}[MARKER];
 
 function judge(error) {
     const lines = String((error && error.stack) || "").split("\n").filter((l) => /^\s+at /.test(l));
-    const ours = lines.findIndex((l) => l.includes(OWN_URL));
+    const ours = lines.findIndex((l) => l.includes(MARKER));
     if (ours === -1) {
         return { native: false, reason: "stack trace hidden or rewritten" };
     }

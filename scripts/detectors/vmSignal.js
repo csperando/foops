@@ -1,12 +1,7 @@
 // ---------- 8. VM / virtualization context signal ----------
-// Shared with method 2's label check (screenDetails.js) — both are
-// substring-matching a string an attacker could set to anything, so they
-// use the same hint vocabulary rather than maintaining two lists.
-export const VM_HINTS = [
-    "vmware", "virtualbox", "vbox", "parallels", "llvmpipe", "swiftshader",
-    "basic render", "basic display", "microsoft basic", "hyper-v",
-    "virtual", "qemu", "bochs", "remote desktop", "rdp"
-];
+// Used by the webcam page only; the monitor uses
+// monitor/probes/virtualization.js + monitor/checks/virtualization.js.
+import { VM_HINTS } from "../monitor/checks/vmHints.js";
 
 export function detectVmSignal() {
     let info;
