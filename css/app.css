@@ -165,6 +165,17 @@ main {
 .card button:hover { filter: brightness(1.08); }
 .card button:disabled { opacity: 0.5; cursor: default; }
 
+.card select {
+    align-self: flex-start;
+    max-width: 100%;
+    background: #0b0d13;
+    color: #c6cbe0;
+    border: 1px solid var(--panel-border);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 0.82rem;
+}
+
 .card.wide { grid-column: 1 / -1; }
 
 .camera-row {

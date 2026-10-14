@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Phony Microphone Detection Playground</title>
+        <link rel="stylesheet" href="css/tokens.css">
+        <link rel="stylesheet" href="css/app.css">
+    </head>
+    <body>
+
+    <header>
+    <h1>Phony Microphone Detection Playground</h1>
+    <p>
+        A site can tell whether a physical microphone is hearing the room or a virtual audio device
+        (VB-Cable, VoiceMeeter, BlackHole, a voice changer, speech synthesis) is feeding it. Some checks
+        here run without permission. The rest analyze a few seconds of the recording itself: its noise,
+        its bandwidth, and whether any of it repeats exactly.
+    </p>
+    </header>
+
+    <div class="hero">
+        <div>
+            <div class="hero-label">Overall verdict</div>
+            <div class="hero-verdict unknown" id="hero-verdict">Checking&hellip;</div>
+            <div class="hero-sub" id="hero-sub">Combines every card below.</div>
+        </div>
+        <div class="hero-count" id="hero-count"></div>
+    </div>
+
+    <main>
+
+    <!-- microphone control -->
+    <section class="card wide">
+        <div class="card-head">
+        <h2 class="card-title">Microphone</h2>
+        <span class="badge unknown" id="badge-mic">off</span>
+        </div>
+        <p class="card-desc">
+        Cards 1&ndash;3 and 11 run without any permission. Cards 4&ndash;10 need the microphone, so
+        they wait for this button. The browser's echo cancellation, noise suppression and gain control
+        are turned off, since they'd reshape what the cards measure. Audio is analyzed in this tab and
+        never leaves the page.
+        </p>
+        <div class="hint">
+            Recording takes 6 seconds. Say a sentence, then stay quiet for a moment &mdash; the quiet
+            part is where a real microphone's own noise shows.
+        </div>
+        <div class="camera-controls">
+            <select id="sel-mic" aria-label="Microphone"><option value="">Default microphone</option></select>
+            <button id="btn-mic">Start microphone&hellip;</button>
+            <pre id="out-mic">(not started)</pre>
+        </div>
+    </section>
+
+    <!-- 1. Permissions API state -->
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">1. Permissions API state (no prompt)</h2>
+        <span class="badge unknown" id="badge-perm">checking</span>
+        </div>
+        <p class="card-desc">
+        <code>navigator.permissions.query({name: "microphone"})</code> reveals whether microphone access
+        is already granted, denied or unset &mdash; without showing a dialog.
+        </p>
+        <pre id="out-perm"></pre>
+    </section>
+
+    <!-- 2. enumerateDevices() inventory -->
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">2. Device inventory &mdash; <code>enumerateDevices()</code></h2>
+        <span class="badge unknown" id="badge-inventory">checking</span>
+        </div>
+        <p class="card-desc">
+        Lists the audio inputs, leaving out the duplicate "default" and "communications" entries
+        Chrome adds. Several inputs are normal (webcam mic, headset) but also what installing virtual
+        audio software looks like. Labels stay hidden until microphone access is granted.
+        </p>
+        <pre id="out-inventory"></pre>
+    </section>
+
+    <!-- 3. API integrity -->
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">3. Is <code>getUserMedia</code> being faked?</h2>
+        <span class="badge unknown" id="badge-api">checking</span>
+        </div>
+        <p class="card-desc">
+        A script or extension can replace <code>getUserMedia</code> to return synthetic speech or a
+        recording built with Web Audio, or fake the Web Audio APIs a detector records through. This
+        compares 15 APIs against pristine copies from a hidden iframe.
+        </p>
+        <pre id="out-api"></pre>
+    </section>
+
+    <!-- 4. label hints -->
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">4. Device name: virtual audio names</h2>
+        <span class="badge unknown" id="badge-labels">not started</span>
+        </div>
+        <p class="card-desc">
+        Matches the active input's name against the defaults of virtual audio cables, voice changers
+        and loopback inputs ("Stereo Mix"). Noise-removal apps (Krisp, NVIDIA Broadcast) wrap a real
+        mic, so they're noted but not flagged. Easy to beat by renaming the device.
+        </p>
+        <pre id="out-labels">(needs microphone)</pre>
+    </section>
+
+    <!-- 5. track shape -->
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">5. Track shape: settings, capabilities, <code>groupId</code></h2>
+        <span class="badge unknown" id="badge-shape">not started</span>
+        </div>
+        <p class="card-desc">
+        A capture track has a deviceId from the device list, and the browser offers its audio
+        processing on it. A track a script built from Web Audio has neither. A shared
+        <code>groupId</code> with a speaker or camera means one physical product.
+        </p>
+        <pre id="out-shape">(needs microphone)</pre>
+    </section>
+
+    <!-- 6. noise floor -->
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">6. Signal: is there ever true digital silence?</h2>
+        <span class="badge unknown" id="badge-noise">not started</span>
+        </div>
+        <p class="card-desc">
+        A microphone and its converter always add noise, so even a silent room never yields a stretch
+        of samples that are exactly zero. Injected audio usually does, between words.
+        </p>
+        <pre id="out-noise">(needs microphone)</pre>
+    </section>
+
+    <!-- 7. bandwidth -->
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">7. Signal: bandwidth brick wall</h2>
+        <span class="badge unknown" id="badge-bandwidth">not started</span>
+        </div>
+        <p class="card-desc">
+        A microphone records up to just under half its sample rate. Speech synthesis, voice changers and
+        compressed recordings are made at lower rates and resampled, which leaves a sheer cliff in the
+        spectrum (at 8, 11, 12 or 16 kHz) with nothing above it. Bluetooth headsets in call mode are
+        genuinely narrowband.
+        </p>
+        <pre id="out-bandwidth">(needs microphone)</pre>
+    </section>
+
+    <!-- 8. resolution -->
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">8. Signal: sample resolution (experimental)</h2>
+        <span class="badge unknown" id="badge-resolution">not started</span>
+        </div>
+        <p class="card-desc">
+        Finds the step size the sample values sit on. 16 bits is normal for microphones and virtual
+        cables alike; a grid coarser than any converter means the audio was crushed before it arrived.
+        </p>
+        <pre id="out-resolution">(needs microphone)</pre>
+    </section>
+
+    <!-- 9. analog traces -->
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">9. Signal: analog traces (hum, DC offset)</h2>
+        <span class="badge unknown" id="badge-analog">not started</span>
+        </div>
+        <p class="card-desc">
+        Positive evidence only. An analog path picks up 50/60 Hz mains hum and often a small DC offset;
+        synthetic audio has neither. Their absence proves nothing (laptops on battery have no hum).
+        </p>
+        <pre id="out-analog">(needs microphone)</pre>
+    </section>
+
+    <!-- 10. exact repeats -->
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">10. Signal: exact repeats</h2>
+        <span class="badge unknown" id="badge-repeats">not started</span>
+        </div>
+        <p class="card-desc">
+        Fresh noise lands on every sample a microphone records, so no stretch ever repeats bit for bit.
+        A looped clip (say, recorded room noise filling the silence) or a generated tone does.
+        </p>
+        <pre id="out-repeats">(needs microphone)</pre>
+    </section>
+
+    <!-- 11. VM / virtualization context signal -->
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">11. Context signal: is this even physical hardware?</h2>
+        <span class="badge unknown" id="badge-vm">checking</span>
+        </div>
+        <p class="card-desc">
+        The same WebGL renderer check as the other pages. Inside a VM or remote-desktop session the
+        microphone is redirected, so treat the signal cards above with extra caution.
+        </p>
+        <pre id="out-vm"></pre>
+    </section>
+
+    </main>
+
+    <details>
+    <summary>Raw diagnostic values</summary>
+    <pre id="out-raw"></pre>
+    </details>
+
+    <footer>
+    Built for local testing &mdash; every technique above runs client-side; audio is analyzed in
+    memory and never uploaded.
+    </footer>
+
+    <script type="module" src="scripts/mic-main.js"></script>
+
+    </body>
+</html>

@@ -214,11 +214,12 @@ what you collect.
 ```sh
 npm test        # node --test; no browser needed
 npm run build   # dist/foops.esm.js, dist/foops.min.js, dist/server.js
+npm run dev     # serves the repo root at http://127.0.0.1:8000/
 ```
 
-Serve the repo root with any static server:
+`npm run dev` (or any static server on the repo root) serves:
 - `index.html` is the library demo; add `?dist` to load the built bundle.
-- `monitor.html` and `webcam.html` are the detector playgrounds.
+- `monitor.html`, `webcam.html` and `mic.html` are the detector playgrounds.
 - `test/hosts/wrapped.html` runs foops next to zone.js- and Sentry-style
   wrappers.
 

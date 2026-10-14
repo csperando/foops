@@ -34,6 +34,7 @@
   "unpkg": "./dist/foops.min.js",
   "jsdelivr": "./dist/foops.min.js",
   "scripts": {
+    "dev": "esbuild --serve=127.0.0.1:8000 --servedir=.",
     "build": "node build.mjs",
     "test": "node --test",
     "prepublishOnly": "npm test && npm run build"
