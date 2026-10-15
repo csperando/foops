@@ -3,152 +3,258 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Foops</title>
-        <link rel="stylesheet" href="css/tokens.css">
-        <link rel="stylesheet" href="css/app.css">
+        <title>foops: catch the second screen</title>
+        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <meta name="description" content="Browser-side spoof detection for remote interviews and proctoring: extra monitors, virtual webcams and phony microphones, re-scored on your server.">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500;700&display=swap">
+        <link rel="stylesheet" href="css/site.css">
+        <script type="module" src="scripts/site.js"></script>
     </head>
     <body>
 
-    <header>
-    <h1>foops demo</h1>
-    <p>
-        A remote-interview style session with the <code>foops.monitor</code> library: start a session,
-        move the window around or plug in a display, and watch the signals and timeline. The report at
-        the bottom is what a platform would send to its server to re-score.
-    </p>
+    <header class="site-header">
+        <nav class="site-nav" aria-label="Main">
+            <a href="./" class="wordmark">foops</a>
+            <div class="nav-links">
+                <a href="docs.html">Docs</a>
+                <a href="docs.html#api">API</a>
+                <a href="examples.html">Examples</a>
+                <a href="https://github.com/csperando/foops">GitHub</a>
+                <a href="https://www.npmjs.com/package/foops" class="nav-install"><span class="accent">$</span> npm i foops</a>
+            </div>
+        </nav>
     </header>
-
-    <div class="hero">
-        <div>
-            <div class="hero-label">Verdict</div>
-            <div class="hero-verdict unknown" id="hero-verdict">Not started</div>
-            <div class="hero-sub" id="hero-sub">Press Start to begin a session.</div>
-        </div>
-        <div class="hero-count" id="hero-count"></div>
-    </div>
 
     <main>
 
-    <section class="card">
-        <div class="card-head">
-        <h2 class="card-title">Session</h2>
-        <span class="badge unknown" id="badge-session">idle</span>
+    <section class="hero">
+        <div class="hero-grid" aria-hidden="true"></div>
+
+        <div class="hero-copy">
+            <div class="pill"><span class="dot pulse"></span>Spoof detection for remote interviews &amp; proctoring</div>
+            <h1 class="h-display">Catch the <span class="accent">second screen.</span></h1>
+            <p class="lede">
+                foops reads the browser's newest platform APIs to spot extra monitors, virtual webcams
+                and phony microphones. It also checks whether those APIs were patched to lie. Every finding
+                ships as a JSON report that your server re-scores.
+            </p>
+            <div class="actions">
+                <a href="docs.html" class="btn btn-primary">Read the docs
+                    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </a>
+                <a href="examples.html" class="btn btn-ghost">See examples</a>
+            </div>
+            <dl class="stats">
+                <div><dt class="sr-only">Monitor checks</dt><dd style="margin:0"><div class="stat-num">12</div><div class="stat-label">monitor checks</div></dd></div>
+                <div><dt class="sr-only">Detectors</dt><dd style="margin:0"><div class="stat-num">3</div><div class="stat-label">detectors</div></dd></div>
+                <div><dt class="sr-only">License</dt><dd style="margin:0"><div class="stat-num">MIT</div><div class="stat-label">open source</div></dd></div>
+            </dl>
         </div>
-        <p class="card-desc">
-        One session per interview. <b>Reset</b> clears the timeline and what the observers remember;
-        <b>Check screen details</b> asks for the window-management permission, so it only runs when you click.
-        </p>
-        <button id="btn-start">Start</button>
-        <button id="btn-stop" disabled>Stop</button>
-        <button id="btn-reset" disabled>Reset</button>
-        <button id="btn-details" disabled>Check screen details&hellip;</button>
+
+        <figure class="console-wrap" aria-label="A live monitor session for this browser">
+            <div class="console">
+                <div class="console-scan" aria-hidden="true"></div>
+                <div class="console-bar">
+                    <span>session · interview-123</span>
+                    <span class="live"><span class="dot dot-flag pulse"></span>running · <span id="console-clock">00:00:00</span></span>
+                </div>
+                <div class="console-verdict">
+                    <div>
+                        <div class="console-label">VERDICT</div>
+                        <div class="console-value" id="console-verdict">unknown</div>
+                    </div>
+                    <div class="console-meta" id="console-meta">score –<br>0 strong signals</div>
+                </div>
+                <ul class="console-rows">
+                    <li data-check="isExtended"><span class="id">isExtended</span><span class="kind">evidence</span><span class="outcome outcome-meh">–</span></li>
+                    <li data-check="windowPosition"><span class="id">windowPosition</span><span class="kind">evidence</span><span class="outcome outcome-meh">–</span></li>
+                    <li data-check="isExtendedIntegrity"><span class="id">isExtendedIntegrity</span><span class="kind">integrity</span><span class="outcome outcome-meh">–</span></li>
+                    <li data-check="refreshRate"><span class="id">refreshRate</span><span class="kind">evidence</span><span class="outcome outcome-meh">–</span></li>
+                    <li data-check="virtualization"><span class="id">virtualization</span><span class="kind">context</span><span class="outcome outcome-meh">–</span></li>
+                </ul>
+                <div class="console-foot">
+                    <span><span class="accent">POST</span> /interview/123/foops</span>
+                    <span>rescore() · mismatches: <span id="console-mismatches">–</span></span>
+                </div>
+            </div>
+        </figure>
     </section>
 
-    <section class="card">
-        <div class="card-head">
-        <h2 class="card-title">Signals</h2>
+    <div class="marquee" aria-hidden="true">
+        <ul class="marquee-track">
+            <li>isExtended</li><li>screenDetails</li><li>screenLabels</li><li>screenLabelIntegrity</li>
+            <li>permission</li><li>availOffset</li><li>windowPosition</li><li>isExtendedIntegrity</li>
+            <li>isExtendedConsistency</li><li>refreshRate</li><li>virtualization</li><li>embedding</li>
+            <li>isExtended</li><li>screenDetails</li><li>screenLabels</li><li>screenLabelIntegrity</li>
+            <li>permission</li><li>availOffset</li><li>windowPosition</li><li>isExtendedIntegrity</li>
+            <li>isExtendedConsistency</li><li>refreshRate</li><li>virtualization</li><li>embedding</li>
+        </ul>
+    </div>
+
+    <section class="section" aria-labelledby="detectors-title">
+        <div class="section-head">
+            <h2 class="h-section" id="detectors-title">Three ways a session gets faked. Three detectors.</h2>
+            <a href="docs.html#detectors" class="accent" style="padding: 12px 0">All detectors →</a>
         </div>
-        <p class="card-desc">
-        Every check's latest result: what kind of signal it is, its outcome and how much weight it carries.
-        </p>
-        <pre id="out-signals"></pre>
+        <div class="cards">
+            <a href="docs.html#monitors" class="card">
+                <svg class="card-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="1.5" y="4" width="11" height="8" rx="1"/><rect x="11.5" y="8" width="11" height="8" rx="1"/><path d="M5 16h4M15 20h4M7 12v4M17 16v4"/></svg>
+                <h3 class="card-title" style="margin:0">Extra monitors</h3>
+                <p>Extended desktops, screens joined mid-session, windows dragged off the primary display and refresh-rate jumps, checked by twelve independent signals.</p>
+                <span class="card-foot">foops.monitor</span>
+            </a>
+            <a href="docs.html#webcam" class="card">
+                <svg class="card-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 10l5-3v10l-5-3"/><rect x="2" y="6" width="13" height="12" rx="2"/><path d="M6 10l4 4M10 10l-4 4"/></svg>
+                <h3 class="card-title" style="margin:0">Virtual webcams</h3>
+                <p>Software cameras posing as real hardware, used to feed in a recording, a stand-in or a generated face.</p>
+                <span class="card-foot">webcam detector</span>
+            </a>
+            <a href="docs.html#mic" class="card">
+                <svg class="card-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4M3 3l18 18"/></svg>
+                <h3 class="card-title" style="margin:0">Phony microphones</h3>
+                <p>Virtual audio devices and routed inputs posing as a real microphone, used to pipe in a voice that isn't the candidate's.</p>
+                <span class="card-foot">microphone detector</span>
+            </a>
+        </div>
     </section>
 
-    <section class="card">
-        <div class="card-head">
-        <h2 class="card-title">Timeline</h2>
+    <section class="section" aria-labelledby="tamper-title" style="padding-top: 20px">
+        <div class="split">
+            <div class="stack">
+                <div class="eyebrow">Checks the checkers</div>
+                <h2 class="h-section" id="tamper-title">Patched the API? That's a signal too.</h2>
+                <p class="lede">
+                    Most detectors ask the browser a question and trust the answer. foops also checks whether
+                    the answer was rigged. It looks for replaced getters, shadowed properties and a rewritten
+                    <code style="color: var(--text-2)">toString</code>, and checks that independent readings agree with each other.
+                </p>
+                <div class="kinds">
+                    <div class="kind"><div class="kind-name">Evidence</div><div class="kind-desc">Is there more than one screen?</div></div>
+                    <div class="kind is-accent"><div class="kind-name">Integrity</div><div class="kind-desc">Can the readings be trusted?</div></div>
+                    <div class="kind"><div class="kind-name">Context</div><div class="kind-desc">How much is the rest worth?</div></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-bar">signals.isExtendedIntegrity</div>
+<pre class="code">{
+  <span class="p">id</span>: <span class="s">"isExtendedIntegrity"</span>,
+  <span class="p">kind</span>: <span class="s">"integrity"</span>,
+  <span class="p">outcome</span>: <span class="f">"tampered"</span>,
+  <span class="p">strength</span>: <span class="f">"strong"</span>,
+  <span class="p">data</span>: {
+    <span class="p">getterNative</span>: <span class="f">false</span>,
+    <span class="p">toStringPatched</span>: <span class="f">true</span>,
+    <span class="p">pristineTampered</span>: <span class="f">true</span>
+  }
+}</pre>
+            </div>
         </div>
-        <p class="card-desc">
-        Every outcome change since the session started, including the verdict.
-        </p>
-        <pre id="out-timeline"></pre>
     </section>
 
-    <section class="card wide">
-        <div class="card-head">
-        <h2 class="card-title">Report</h2>
+    <div class="section-band">
+        <section class="section" aria-labelledby="server-title">
+            <div class="stack" style="max-width: 760px; margin-bottom: 56px">
+                <div class="eyebrow">Built for the server</div>
+                <h2 class="h-section" id="server-title">Never trust a browser's verdict. foops doesn't.</h2>
+                <p class="lede">
+                    The person being checked controls the browser. So the browser only gathers evidence, and
+                    your server recomputes every outcome from the raw data. If someone edits a report by hand,
+                    it shows up as a mismatch.
+                </p>
+            </div>
+            <ol class="cards" style="list-style: none; margin: 0; padding: 0">
+                <li class="card">
+                    <span class="step-num">01 · Watch</span>
+                    <h3 class="step-title" style="margin:0">Start a session when the interview starts</h3>
+<pre class="code"><span class="k">const</span> session = monitor
+  .createSession();
+<span class="k">await</span> session.start();</pre>
+                </li>
+                <li class="card">
+                    <span class="step-num">02 · Report</span>
+                    <h3 class="step-title" style="margin:0">Send plain JSON: signals and a timeline</h3>
+<pre class="code"><span class="k">const</span> report = session.stop();
+<span class="k">await</span> fetch(url, {
+  method: <span class="s">"POST"</span>,
+  body: JSON.stringify(report) });</pre>
+                </li>
+                <li class="card is-accent">
+                    <span class="step-num">03 · Re-score</span>
+                    <h3 class="step-title" style="margin:0">Recompute everything server-side</h3>
+<pre class="code"><span class="k">import</span> { rescore }
+  <span class="k">from</span> <span class="s">"foops/server"</span>;
+<span class="k">const</span> { verdict, mismatches }
+  = rescore(report);</pre>
+                </li>
+            </ol>
+        </section>
+    </div>
+
+    <section class="section" aria-labelledby="explore-title">
+        <h2 class="h-section" id="explore-title" style="margin-bottom: 40px">Start building.</h2>
+        <nav class="explore" aria-labelledby="explore-title">
+            <a href="docs.html">
+                <span class="explore-top"><span>Docs</span><span aria-hidden="true">→</span></span>
+                <span class="explore-desc">Install, sessions, server re-scoring and the three detectors.</span>
+                <span class="explore-meta">docs.html</span>
+            </a>
+            <a href="docs.html#api">
+                <span class="explore-top"><span>API reference</span><span aria-hidden="true">→</span></span>
+                <span class="explore-desc">Every method, option, signal field and check id.</span>
+                <span class="explore-meta">docs.html#api</span>
+            </a>
+            <a href="examples.html">
+                <span class="explore-top"><span>Examples</span><span aria-hidden="true">→</span></span>
+                <span class="explore-desc">Interview sessions, server routes, custom scorers and iframes.</span>
+                <span class="explore-meta">examples.html</span>
+            </a>
+            <a href="examples.html#playgrounds">
+                <span class="explore-top"><span>Playgrounds</span><span aria-hidden="true">→</span></span>
+                <span class="explore-desc">Try each detector live in your own browser.</span>
+                <span class="explore-meta">monitor · webcam · mic</span>
+            </a>
+            <a href="https://github.com/csperando/foops">
+                <span class="explore-top"><span>GitHub</span><span aria-hidden="true">→</span></span>
+                <span class="explore-desc">Source, issues and releases.</span>
+                <span class="explore-meta">csperando/foops</span>
+            </a>
+            <a href="https://www.npmjs.com/package/foops">
+                <span class="explore-top"><span>npm</span><span aria-hidden="true">→</span></span>
+                <span class="explore-desc">ESM, a CDN build and foops/server.</span>
+                <span class="explore-meta">npm i foops</span>
+            </a>
+        </nav>
+    </section>
+
+    <section class="section" style="padding-top: 0" aria-label="Install">
+        <div class="cta">
+            <div style="max-width: 640px">
+                <div class="cta-title">One install. Twelve signals.</div>
+                <div class="cta-sub">Runs in the browser, re-scores on your server, MIT licensed.</div>
+            </div>
+            <div class="cta-side">
+                <code class="cta-install"><span class="accent">$</span> npm install foops</code>
+                <a href="docs.html" class="btn">Get started →</a>
+            </div>
         </div>
-        <p class="card-desc">
-        Plain JSON. Don't trust its verdict on the server &mdash; score it there with
-        <code>rescore()</code> from <code>foops/server</code>.
-        Library loaded from: <code id="lib-source">&hellip;</code> (add <code>?dist</code> to the URL to use the built bundle).
-        </p>
-        <pre id="out-report"></pre>
     </section>
 
     </main>
 
-    <script type="module">
-        // ?dist loads the built bundle instead of the source, to test a release build.
-        const useDist = new URLSearchParams(location.search).has("dist");
-        const { monitor } = await import(useDist ? "./dist/foops.esm.js" : "./scripts/lib/index.js");
-        document.getElementById("lib-source").textContent = useDist ? "dist/foops.esm.js" : "source";
-
-        const $ = (id) => document.getElementById(id);
-        const HERO = {
-            multiple: { text: "Multiple displays detected", state: "yes" },
-            single: { text: "Single display", state: "no" },
-            unknown: { text: "Unknown", state: "unknown" }
-        };
-        let session = null;
-
-        const time = (t) => new Date(t).toLocaleTimeString();
-        const pad = (s, n) => String(s).padEnd(n);
-
-        function render(report) {
-            const hero = HERO[report.verdict] || HERO.unknown;
-            $("hero-verdict").textContent = hero.text;
-            $("hero-verdict").className = "hero-verdict " + hero.state;
-            $("hero-count").innerHTML = `${report.timeline.length}<small>timeline entries</small>`;
-
-            $("out-signals").textContent = Object.values(report.signals)
-                .map((s) => `${pad(s.id, 22)}${pad(s.kind, 11)}${s.supported ? s.outcome + (s.strength ? ` (${s.strength})` : "") : "unsupported"}`)
-                .join("\n");
-            $("out-timeline").textContent = report.timeline
-                .map((e) => `${time(e.t)}  ${pad(e.id, 22)}${e.supported === false ? "unsupported" : e.outcome}`)
-                .join("\n");
-            $("out-report").textContent = JSON.stringify(report, null, 2);
-        }
-
-        function setState(state) {
-            const running = state === "running";
-            $("badge-session").className = "badge " + (running ? "yes" : "unknown");
-            $("badge-session").textContent = state;
-            $("btn-start").disabled = running;
-            $("btn-stop").disabled = !running;
-            $("btn-reset").disabled = !running;
-            $("btn-details").disabled = !running;
-            $("hero-sub").textContent = running
-                ? "Live: updates as the session sees changes."
-                : "Stopped: this is the final report.";
-        }
-
-        $("btn-start").addEventListener("click", async () => {
-            session = monitor.createSession();
-            session.on("update", render);
-            setState("running");
-            render(await session.start());
-        });
-
-        $("btn-stop").addEventListener("click", () => {
-            render(session.stop());
-            setState("stopped");
-        });
-
-        $("btn-reset").addEventListener("click", () => {
-            session.reset();
-            render(session.report());
-        });
-
-        $("btn-details").addEventListener("click", async () => {
-            $("btn-details").disabled = true;
-            try {
-                render(await session.screenDetails());
-            } finally {
-                $("btn-details").disabled = session.state !== "running";
-            }
-        });
-    </script>
+    <footer class="site-footer">
+        <div class="wrap">
+            <span class="wordmark" style="font-size: 22px">foops</span>
+            <nav aria-label="Footer">
+                <a href="docs.html">Docs</a>
+                <a href="examples.html">Examples</a>
+                <a href="https://github.com/csperando/foops">GitHub</a>
+                <a href="https://www.npmjs.com/package/foops">npm</a>
+                <a href="https://github.com/csperando/foops/blob/main/LICENSE">MIT License</a>
+            </nav>
+        </div>
+    </footer>
 
     </body>
 </html>

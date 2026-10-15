@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>foops docs</title>
+        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <meta name="description" content="Install foops, run a session per interview, re-score reports on your server, and read every signal and check.">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500;700&display=swap">
+        <link rel="stylesheet" href="css/site.css">
+        <script type="module" src="scripts/site.js"></script>
+    </head>
+    <body>
+
+    <header class="site-header">
+        <nav class="site-nav" aria-label="Main" style="max-width: 1320px">
+            <div class="brand">
+                <a href="./" class="wordmark">foops</a>
+                <span class="chip">docs · 0.1.0</span>
+            </div>
+            <div class="nav-links">
+                <a href="docs.html" aria-current="page">Docs</a>
+                <a href="examples.html">Examples</a>
+                <a href="https://github.com/csperando/foops">GitHub</a>
+                <a href="https://www.npmjs.com/package/foops" class="nav-install"><span class="accent">$</span> npm i foops</a>
+            </div>
+        </nav>
+    </header>
+
+    <div class="docs">
+
+    <nav class="docs-nav" aria-label="Docs">
+        <div class="docs-nav-inner">
+            <div>
+                <h2>GET STARTED</h2>
+                <ul>
+                    <li><a href="#overview">Overview</a></li>
+                    <li><a href="#install">Install</a></li>
+                    <li><a href="#session">A session per interview</a></li>
+                    <li><a href="#server">Score on the server</a></li>
+                </ul>
+            </div>
+            <div>
+                <h2>DETECTORS</h2>
+                <ul>
+                    <li><a href="#monitors">Monitors <span class="badge badge-v0">v0</span></a></li>
+                    <li><a href="#webcam">Webcam <span class="badge badge-beta">beta</span></a></li>
+                    <li><a href="#mic">Microphone <span class="badge badge-beta">beta</span></a></li>
+                </ul>
+            </div>
+            <div>
+                <h2>REFERENCE</h2>
+                <ul>
+                    <li><a href="#api">Session API</a></li>
+                    <li><a href="#signals">Reports &amp; signals</a></li>
+                    <li><a href="#checks">Checks</a></li>
+                    <li><a href="#scorers">Custom scorers</a></li>
+                    <li><a href="#privacy">Privacy</a></li>
+                    <li><a href="#versioning">Versioning</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="docs-main">
+
+    <section id="overview">
+        <div class="eyebrow" style="text-transform: none; letter-spacing: 0">Overview</div>
+        <h1 class="h-display">foops docs</h1>
+        <p class="lede">
+            foops runs spoof checks in the browser and returns a plain JSON report: a verdict, every check's
+            result (a <em>signal</em>) and a timeline of what changed when. It's built for sessions like a
+            remote interview: start a session when the interview starts, watch it, and send the report to
+            your server to re-score.
+        </p>
+        <p>
+            The <a class="inline" href="https://github.com/csperando/foops#readme">README</a> is the full
+            library reference and ships with the npm package. These pages cover the same API with more room.
+        </p>
+    </section>
+
+    <section id="detectors" aria-labelledby="detectors-title">
+        <h2 id="detectors-title">The three detectors</h2>
+        <div class="pillars">
+            <a id="monitors" href="monitor.html" class="card is-accent">
+                <span class="pillar-top"><span>foops.monitor</span><span class="badge badge-v0">v0</span></span>
+                <span class="card-title">Monitors</span>
+                <p>Twelve checks for extended desktops, extra screens, off-screen windows and patched display APIs. Sessions, server re-scoring and custom scorers.</p>
+                <span class="pillar-link">Open the playground →</span>
+            </a>
+            <a id="webcam" href="webcam.html" class="card">
+                <span class="pillar-top"><span>webcam</span><span class="badge badge-beta">beta</span></span>
+                <span class="card-title">Virtual webcam</span>
+                <p>Detects software cameras posing as real hardware. Try it in the playground. The library API may still change.</p>
+                <span class="pillar-link beta">Open the playground →</span>
+            </a>
+            <a id="mic" href="mic.html" class="card">
+                <span class="pillar-top"><span>microphone</span><span class="badge badge-beta">beta</span></span>
+                <span class="card-title">Phony microphone</span>
+                <p>Detects virtual audio devices posing as a real microphone. Try it in the playground. The library API may still change.</p>
+                <span class="pillar-link beta">Open the playground →</span>
+            </a>
+        </div>
+        <div class="callout callout-info">
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8fc1ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+            <p><b>beta</b> means the detector works in its playground, but its library API isn't settled yet. Expect breaking changes before v0.</p>
+        </div>
+    </section>
+
+    <section id="install">
+        <h2>Install</h2>
+<pre class="code"><span class="a">$</span> npm install foops</pre>
+        <p>
+            Or from a CDN. Pin the exact version (see <a class="inline" href="#versioning">Versioning</a>) and
+            add the <a class="inline" href="https://developer.mozilla.org/docs/Web/Security/Subresource_Integrity">SRI</a>
+            hash jsDelivr lists for that file.
+        </p>
+<pre class="code"><span class="c">&lt;!-- a script tag exposes window.foops --&gt;</span>
+&lt;<span class="k">script</span> src=<span class="s">"https://cdn.jsdelivr.net/npm/foops@0.1.0/dist/foops.min.js"</span> crossorigin=<span class="s">"anonymous"</span>&gt;&lt;/<span class="k">script</span>&gt;
+
+<span class="c">// or as a module</span>
+<span class="k">import</span> { monitor } <span class="k">from</span> <span class="s">"https://cdn.jsdelivr.net/npm/foops@0.1.0/dist/foops.esm.js"</span>;</pre>
+    </section>
+
+    <section id="session">
+        <h2>A session per interview</h2>
+<pre class="code"><span class="k">import</span> { monitor } <span class="k">from</span> <span class="s">"foops"</span>;
+
+<span class="k">const</span> session = monitor.createSession();
+
+session.on(<span class="s">"change"</span>, (report, entries) =&gt; {
+    <span class="c">// An outcome or the verdict changed; `entries` were added to report.timeline.</span>
+    console.log(report.verdict, entries);
+});
+
+<span class="k">await</span> session.start(); <span class="c">// resolves with the first full report</span>
+
+<span class="c">// getScreenDetails() prompts for permission, so call it from a click.</span>
+button.addEventListener(<span class="s">"click"</span>, () =&gt; session.screenDetails());
+
+<span class="c">// When the interview ends:</span>
+<span class="k">const</span> report = session.stop();
+<span class="k">await</span> fetch(<span class="s">"/interview/123/foops"</span>, { method: <span class="s">"POST"</span>, body: JSON.stringify(report) });</pre>
+        <p>
+            Sessions never share state, so several can run at once (React StrictMode mounting twice is fine),
+            and a new interview gets a clean slate. <code>session.reset()</code> clears the timeline and what
+            the observers remember without stopping. <code>stop()</code> removes every listener and timer.
+        </p>
+    </section>
+
+    <section id="server">
+        <h2>Score on the server</h2>
+        <div class="callout callout-warn">
+            <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ff8a3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18h.01"/></svg>
+            <p><b>Never trust a verdict computed in the browser.</b> The person being checked controls the browser, so they can patch the library or forge the request. Re-score every report with <code>foops/server</code>.</p>
+        </div>
+<pre class="code"><span class="k">import</span> { rescore } <span class="k">from</span> <span class="s">"foops/server"</span>;
+
+<span class="k">const</span> result = rescore(reportFromClient);
+<span class="c">// { verdict, score, signals, mismatches, unknownChecks, versionMatches }</span></pre>
+        <p>
+            <code>rescore</code> ignores the client's verdict and outcomes. It recomputes every signal from its
+            own data with the same pure checks the browser ran, then scores the result. <code>mismatches</code>
+            lists signals whose reported outcome doesn't follow from their data, which is a sign of a
+            hand-edited report. <code>versionMatches</code> says whether the report came from the same library version.
+        </p>
+        <p>
+            It can't catch a client that fabricates <em>consistent</em> data. Treat a clean report as the
+            absence of red flags, not as proof.
+        </p>
+    </section>
+
+    <section id="api">
+        <h2>Session API</h2>
+        <div class="table-box">
+            <table>
+                <thead><tr><th scope="col">Method</th><th scope="col">Description</th></tr></thead>
+                <tbody>
+                    <tr><td>start()</td><td>Starts watching. Resolves with the first report. Only once per session.</td></tr>
+                    <tr><td>screenDetails()</td><td>Runs <code>getScreenDetails()</code> (permission prompt; needs a user gesture). Later screen changes keep updating the session.</td></tr>
+                    <tr><td>report()</td><td>The current report.</td></tr>
+                    <tr><td>reset()</td><td>Clears the timeline and observer memory; keeps running.</td></tr>
+                    <tr><td>stop()</td><td>Stops everything and returns the final report.</td></tr>
+                    <tr><td>on(event, fn)</td><td>Returns a function that removes the listener. Events: <code>update (report, ids)</code> whenever a signal is refreshed, <code>change (report, entries)</code> when an outcome or the verdict changes, and <code>pending (id)</code> when an async check starts.</td></tr>
+                    <tr><td>state</td><td><code>"idle"</code>, <code>"running"</code> or <code>"stopped"</code>.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <h3>Options</h3>
+        <p>For <code>createSession(options)</code>, and also <code>run</code> and <code>checks.&lt;id&gt;</code>.</p>
+        <div class="table-box">
+            <table>
+                <thead><tr><th scope="col">Option</th><th scope="col">Default</th><th scope="col">Description</th></tr></thead>
+                <tbody>
+                    <tr><td>checks</td><td>every check</td><td>Check ids to run. Skip <code>refreshRate</code> or <code>virtualization</code> to avoid their cost. Checks another check depends on run anyway but stay out of the report.</td></tr>
+                    <tr><td>scorer</td><td><code>defaultScorer</code></td><td><code>(signals) =&gt; ({ verdict, score })</code>.</td></tr>
+                    <tr><td>cadence</td><td><code>{ windowPositionMs: 500, refreshRateMs: 4000, refreshTimeoutMs: 1000 }</code></td><td>Poll intervals, and how long <code>start()</code> waits for the first refresh-rate measurement.</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <h3>One-shot checks</h3>
+<pre class="code"><span class="k">const</span> report = <span class="k">await</span> monitor.run();                 <span class="c">// start, first readings, stop</span>
+<span class="k">const</span> signal = <span class="k">await</span> monitor.checks.isExtended();   <span class="c">// any check id, on its own</span></pre>
+        <p>
+            <code>windowPosition</code> and <code>refreshRate</code> watch for changes over time, so on their
+            own they only see a single sample. Use a session for those.
+        </p>
+    </section>
+
+    <section id="signals">
+        <h2>Reports &amp; signals</h2>
+        <p>A report is plain, JSON-serializable data:</p>
+<pre class="code">{
+  <span class="p">version</span>: <span class="s">"0.1.0"</span>,          <span class="c">// library version that produced it</span>
+  <span class="p">verdict</span>: <span class="s">"single"</span>,         <span class="c">// "single" | "multiple" | "unknown", from the scorer</span>
+  <span class="p">score</span>: 0,                  <span class="c">// number | null, from the scorer</span>
+  <span class="p">startedAt</span>, <span class="p">updatedAt</span>,      <span class="c">// epoch ms</span>
+  <span class="p">signals</span>: { <span class="p">isExtended</span>: { ... }, ... },
+  <span class="p">timeline</span>: [
+    { t, id: <span class="s">"isExtended"</span>, supported: true, outcome: <span class="s">"single"</span>, strength: <span class="s">"strong"</span> },
+    { t, id: <span class="s">"verdict"</span>, outcome: <span class="s">"single"</span>, score: 0 }
+  ]
+}</pre>
+        <p>Every check returns a <b>signal</b>:</p>
+        <div class="table-box">
+            <table>
+                <thead><tr><th scope="col">Field</th><th scope="col">Description</th></tr></thead>
+                <tbody>
+                    <tr><td>id</td><td>The check id.</td></tr>
+                    <tr><td>kind</td><td><code>evidence</code> (about the question itself), <code>integrity</code> (can the readings be trusted?) or <code>context</code> (the environment, which changes how much the rest is worth).</td></tr>
+                    <tr><td>supported</td><td><code>false</code> when the browser can't run the check here. <code>outcome</code> is then <code>null</code>.</td></tr>
+                    <tr><td>outcome</td><td>Evidence: <code>multiple</code>, <code>single</code> or <code>inconclusive</code>. Integrity: <code>clean</code>, <code>modified</code>, <code>suspicious</code> or <code>tampered</code>. Context: check-specific.</td></tr>
+                    <tr><td>strength</td><td><code>strong</code>, <code>weak</code>, or <code>null</code> for outcomes that carry no weight.</td></tr>
+                    <tr><td>data</td><td>The facts the outcome was derived from.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="checks">
+        <h2>Checks</h2>
+        <div class="table-box">
+            <table style="min-width: 760px">
+                <thead><tr><th scope="col">id</th><th scope="col">kind</th><th scope="col">outcomes</th><th scope="col">cost</th></tr></thead>
+                <tbody>
+                    <tr><td>isExtended</td><td>evidence</td><td>multiple, single (strong)</td><td>free</td></tr>
+                    <tr><td>screenDetails</td><td>evidence</td><td>multiple, single (strong); inconclusive if denied</td><td><b>permission prompt, user gesture</b></td></tr>
+                    <tr><td>screenLabels</td><td>context</td><td>virtual (weak), physical</td><td>with <code>screenDetails</code></td></tr>
+                    <tr><td>screenLabelIntegrity</td><td>integrity</td><td>clean, tampered (strong)</td><td>with <code>screenDetails</code></td></tr>
+                    <tr><td>permission</td><td>context</td><td>granted, denied, prompt</td><td>free</td></tr>
+                    <tr><td>availOffset</td><td>evidence</td><td>multiple (weak), inconclusive</td><td>free</td></tr>
+                    <tr><td>windowPosition</td><td>evidence</td><td>multiple (strong), inconclusive</td><td>polled</td></tr>
+                    <tr><td>isExtendedIntegrity</td><td>integrity</td><td>clean, modified (weak), tampered (strong)</td><td>free</td></tr>
+                    <tr><td>isExtendedConsistency</td><td>integrity</td><td>clean, suspicious (weak)</td><td>free</td></tr>
+                    <tr><td>refreshRate</td><td>evidence</td><td>multiple (weak), inconclusive</td><td>~500 ms of animation frames, repeated</td></tr>
+                    <tr><td>virtualization</td><td>context</td><td>virtual (weak), physical</td><td>opens a WebGL context once</td></tr>
+                    <tr><td>embedding</td><td>context</td><td>top, iframe (strong when the API is blocked)</td><td>free</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>The <code>data</code> fields each check reports are listed in the <a class="inline" href="https://github.com/csperando/foops#reports-and-signals">README</a>. A few outcomes need care:</p>
+        <ul>
+            <li><code>isExtendedIntegrity</code> reports <b>modified</b> (reason <code>tostring-patched</code>) when the page's <code>Function.prototype.toString</code> was replaced. Privacy browsers (Brave), frameworks (zone.js) and monitoring tools (Sentry) all do this, so it isn't evidence of cheating.</li>
+            <li>Inside a cross-origin iframe without <code>allow="window-management"</code>, <code>isExtended</code> reports <code>supported: false</code> with <code>blockedByPolicy: true</code>. Embed with that <code>allow</code> attribute if you need it.</li>
+            <li><b>unknown is normal.</b> Most checks need Chromium; Firefox and Safari users mostly get unsupported signals and an <code>unknown</code> verdict. Don't treat that as suspicious.</li>
+        </ul>
+    </section>
+
+    <section id="scorers">
+        <h2>Custom scorers</h2>
+        <p>
+            The default scorer is deliberately simple until there's a real formula: the verdict comes from
+            <code>screen.isExtended</code> alone (<code>score</code> 1, 0 or null), and the other signals don't
+            change it yet. Pass your own to combine them. It runs in the browser and in <code>rescore</code>:
+        </p>
+<pre class="code"><span class="k">const</span> scorer = (signals) =&gt; {
+    <span class="k">const</span> { isExtendedIntegrity } = signals;
+    <span class="k">if</span> (isExtendedIntegrity?.outcome === <span class="s">"tampered"</span>) <span class="k">return</span> { verdict: <span class="s">"unknown"</span>, score: null };
+    <span class="k">return</span> monitor.defaultScorer(signals);
+};
+monitor.createSession({ scorer });
+rescore(report, { scorer });</pre>
+    </section>
+
+    <section id="privacy">
+        <h2>Privacy</h2>
+        <p>
+            Reports contain fingerprinting data: screen labels and geometry (<code>screenDetails</code>) and the
+            GPU renderer string (<code>virtualization</code>). The server needs them to recompute outcomes. If
+            you store reports, treat them as personal data under the privacy laws that apply to you, and tell
+            people what you collect.
+        </p>
+    </section>
+
+    <section id="versioning">
+        <h2>Versioning</h2>
+        <ul>
+            <li><b>While on 0.x</b>, a minor release (0.2.0) may change the API or what outcome a given input produces. A patch release fixes bugs without changing any outcome for the same input.</li>
+            <li><b>From 1.0</b>, API and report-shape changes are major releases. Changes that make the same input produce a different outcome (thresholds, new evidence) are minor releases, listed under "Detection changes".</li>
+            <li>Pin an exact version either way: a detection change is a behavior change.</li>
+        </ul>
+    </section>
+
+    <nav class="pager" aria-label="Next">
+        <a href="./"><small>← Back</small><span>Home</span></a>
+        <a href="examples.html"><small>Next →</small><span>Examples</span></a>
+    </nav>
+
+    </main>
+    </div>
+
+    <footer class="site-footer">
+        <div class="wrap" style="max-width: 1320px">
+            <span class="wordmark" style="font-size: 22px">foops</span>
+            <nav aria-label="Footer">
+                <a href="examples.html">Examples</a>
+                <a href="https://github.com/csperando/foops">GitHub</a>
+                <a href="https://www.npmjs.com/package/foops">npm</a>
+                <a href="https://github.com/csperando/foops/blob/main/LICENSE">MIT License</a>
+            </nav>
+        </div>
+    </footer>
+
+    </body>
+</html>

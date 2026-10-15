@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>foops examples</title>
+        <link rel="icon" href="favicon.svg" type="image/svg+xml">
+        <meta name="description" content="Working foops patterns for the browser and the server, plus live playgrounds for each detector.">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=JetBrains+Mono:wght@400;500;700&display=swap">
+        <link rel="stylesheet" href="css/site.css">
+        <script type="module" src="scripts/site.js"></script>
+    </head>
+    <body>
+
+    <header class="site-header">
+        <nav class="site-nav" aria-label="Main">
+            <a href="./" class="wordmark">foops</a>
+            <div class="nav-links">
+                <a href="docs.html">Docs</a>
+                <a href="examples.html" aria-current="page">Examples</a>
+                <a href="https://github.com/csperando/foops">GitHub</a>
+                <a href="https://www.npmjs.com/package/foops" class="nav-install"><span class="accent">$</span> npm i foops</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="examples-main">
+
+    <div class="stack" style="max-width: 760px; gap: 18px">
+        <div class="eyebrow">Examples</div>
+        <h1 class="h-display">Copy, paste, catch.</h1>
+        <p class="lede" style="font-size: 19px">Working patterns for the browser and the server. Each one uses only the public API.</p>
+    </div>
+
+    <div class="filters" role="group" aria-label="Filter examples" hidden>
+        <button type="button" data-filter="all" aria-pressed="true">All</button>
+        <button type="button" data-filter="monitors" aria-pressed="false">Monitors</button>
+        <button type="button" data-filter="server" aria-pressed="false">Server</button>
+        <button type="button" data-filter="integration" aria-pressed="false">Integration</button>
+    </div>
+
+    <div class="example-grid">
+
+        <article class="example" data-tag="monitors">
+            <div class="example-body">
+                <div class="example-tags"><span>Monitors</span><span>browser</span></div>
+                <h2>Watch a remote interview</h2>
+                <p>One session per interview. Log every verdict change, then post the final report.</p>
+            </div>
+<pre class="code"><span class="k">const</span> session = monitor.createSession();
+session.on(<span class="s">"change"</span>, (report) =&gt; log(report.verdict));
+<span class="k">await</span> session.start();
+
+<span class="c">// when the interview ends</span>
+<span class="k">const</span> report = session.stop();
+<span class="k">await</span> fetch(<span class="s">"/interview/123/foops"</span>, {
+  method: <span class="s">"POST"</span>, body: JSON.stringify(report) });</pre>
+        </article>
+
+        <article class="example" data-tag="server">
+            <div class="example-body">
+                <div class="example-tags"><span>Server</span><span>node</span></div>
+                <h2>Re-score in your API route</h2>
+                <p>Ignore the client's verdict. Recompute it and flag reports that were edited by hand.</p>
+            </div>
+<pre class="code"><span class="k">import</span> { rescore } <span class="k">from</span> <span class="s">"foops/server"</span>;
+
+<span class="k">const</span> { verdict, mismatches, versionMatches } =
+  rescore(req.body);
+<span class="k">if</span> (mismatches.length) flagForReview(req.body);</pre>
+        </article>
+
+        <article class="example" data-tag="monitors">
+            <div class="example-body">
+                <div class="example-tags"><span>Monitors</span><span>browser</span></div>
+                <h2>One-shot check</h2>
+                <p>No session: start, take the first readings, stop. Or run a single check by id.</p>
+            </div>
+<pre class="code"><span class="k">const</span> report = <span class="k">await</span> monitor.run();
+<span class="k">const</span> signal = <span class="k">await</span> monitor.checks.isExtended();</pre>
+        </article>
+
+        <article class="example" data-tag="server">
+            <div class="example-body">
+                <div class="example-tags"><span>Server</span><span>shared</span></div>
+                <h2>Custom scorer</h2>
+                <p>Combine signals your own way. The same scorer runs in the browser and in <code>rescore()</code>.</p>
+            </div>
+<pre class="code"><span class="k">const</span> scorer = (signals) =&gt; {
+  <span class="k">const</span> { isExtendedIntegrity } = signals;
+  <span class="k">if</span> (isExtendedIntegrity?.outcome === <span class="s">"tampered"</span>)
+    <span class="k">return</span> { verdict: <span class="s">"unknown"</span>, score: null };
+  <span class="k">return</span> monitor.defaultScorer(signals);
+};
+monitor.createSession({ scorer });</pre>
+        </article>
+
+        <article class="example" data-tag="integration">
+            <div class="example-body">
+                <div class="example-tags"><span>Integration</span><span>html</span></div>
+                <h2>Embed in an iframe</h2>
+                <p>Cross-origin frames need window-management allowed, or <code>isExtended</code> reports <code>blockedByPolicy</code>.</p>
+            </div>
+<pre class="code">&lt;<span class="k">iframe</span>
+  src=<span class="s">"https://interview.example.com/room"</span>
+  allow=<span class="s">"window-management"</span>&gt;
+&lt;/<span class="k">iframe</span>&gt;</pre>
+        </article>
+
+        <article class="example" data-tag="integration">
+            <div class="example-body">
+                <div class="example-tags"><span>Integration</span><span>html</span></div>
+                <h2>Drop-in script tag</h2>
+                <p>No bundler. Pin the version and add the SRI hash from jsDelivr.</p>
+            </div>
+<pre class="code">&lt;<span class="k">script</span> src=<span class="s">"https://cdn.jsdelivr.net/npm/foops@0.1.0/dist/foops.min.js"</span>
+  crossorigin=<span class="s">"anonymous"</span>&gt;&lt;/<span class="k">script</span>&gt;
+&lt;<span class="k">script</span>&gt;
+  foops.monitor.run().then((r) =&gt; console.log(r.verdict));
+&lt;/<span class="k">script</span>&gt;</pre>
+        </article>
+
+    </div>
+
+    <section id="playgrounds" class="playgrounds" aria-labelledby="playgrounds-title">
+        <div class="stack" style="max-width: 640px; gap: 10px">
+            <h2 class="h-section" id="playgrounds-title" style="font-size: clamp(32px, 4vw, 48px)">Playgrounds</h2>
+            <p class="lede" style="font-size: 17px">Run each detector live against your own setup. Plug in a display, switch cameras, swap mics.</p>
+        </div>
+        <div class="cards">
+            <a href="monitor.html" class="card is-accent">
+                <span class="pillar-top"><span class="card-title">Multi-monitor</span><span class="badge badge-v0">v0</span></span>
+                <p>Every monitor check, its signal and the live timeline.</p>
+                <span class="pillar-link">Open playground →</span>
+            </a>
+            <a href="webcam.html" class="card">
+                <span class="pillar-top"><span class="card-title">Virtual webcam</span><span class="badge badge-beta">beta</span></span>
+                <p>Pick a camera and see whether foops thinks it's real.</p>
+                <span class="pillar-link beta">Open playground →</span>
+            </a>
+            <a href="mic.html" class="card">
+                <span class="pillar-top"><span class="card-title">Phony microphone</span><span class="badge badge-beta">beta</span></span>
+                <p>Pick an input and see whether foops thinks it's real.</p>
+                <span class="pillar-link beta">Open playground →</span>
+            </a>
+        </div>
+    </section>
+
+    </main>
+
+    <footer class="site-footer">
+        <div class="wrap">
+            <span class="wordmark" style="font-size: 22px">foops</span>
+            <nav aria-label="Footer">
+                <a href="docs.html">Docs</a>
+                <a href="https://github.com/csperando/foops">GitHub</a>
+                <a href="https://www.npmjs.com/package/foops">npm</a>
+                <a href="https://github.com/csperando/foops/blob/main/LICENSE">MIT License</a>
+            </nav>
+        </div>
+    </footer>
+
+    </body>
+</html>

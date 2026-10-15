@@ -32,7 +32,7 @@ jobs:
       - name: Assemble the site
         run: |
           mkdir _site
-          cp -r index.html monitor.html webcam.html mic.html css scripts dist _site/
+          cp -r index.html docs.html examples.html monitor.html webcam.html mic.html favicon.svg css scripts dist _site/
       - uses: actions/upload-pages-artifact@v4
         with:
           path: _site

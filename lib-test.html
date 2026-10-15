@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Foops</title>
+        <link rel="stylesheet" href="css/tokens.css">
+        <link rel="stylesheet" href="css/app.css">
+    </head>
+    <body>
+
+    <header>
+    <h1>foops demo</h1>
+    <p>
+        A remote-interview style session with the <code>foops.monitor</code> library: start a session,
+        move the window around or plug in a display, and watch the signals and timeline. The report at
+        the bottom is what a platform would send to its server to re-score.
+    </p>
+    </header>
+
+    <div class="hero">
+        <div>
+            <div class="hero-label">Verdict</div>
+            <div class="hero-verdict unknown" id="hero-verdict">Not started</div>
+            <div class="hero-sub" id="hero-sub">Press Start to begin a session.</div>
+        </div>
+        <div class="hero-count" id="hero-count"></div>
+    </div>
+
+    <main>
+
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">Session</h2>
+        <span class="badge unknown" id="badge-session">idle</span>
+        </div>
+        <p class="card-desc">
+        One session per interview. <b>Reset</b> clears the timeline and what the observers remember;
+        <b>Check screen details</b> asks for the window-management permission, so it only runs when you click.
+        </p>
+        <button id="btn-start">Start</button>
+        <button id="btn-stop" disabled>Stop</button>
+        <button id="btn-reset" disabled>Reset</button>
+        <button id="btn-details" disabled>Check screen details&hellip;</button>
+    </section>
+
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">Signals</h2>
+        </div>
+        <p class="card-desc">
+        Every check's latest result: what kind of signal it is, its outcome and how much weight it carries.
+        </p>
+        <pre id="out-signals"></pre>
+    </section>
+
+    <section class="card">
+        <div class="card-head">
+        <h2 class="card-title">Timeline</h2>
+        </div>
+        <p class="card-desc">
+        Every outcome change since the session started, including the verdict.
+        </p>
+        <pre id="out-timeline"></pre>
+    </section>
+
+    <section class="card wide">
+        <div class="card-head">
+        <h2 class="card-title">Report</h2>
+        </div>
+        <p class="card-desc">
+        Plain JSON. Don't trust its verdict on the server &mdash; score it there with
+        <code>rescore()</code> from <code>foops/server</code>.
+        Library loaded from: <code id="lib-source">&hellip;</code> (add <code>?dist</code> to the URL to use the built bundle).
+        </p>
+        <pre id="out-report"></pre>
+    </section>
+
+    </main>
+
+    <script type="module">
+        // ?dist loads the built bundle instead of the source, to test a release build.
+        const useDist = new URLSearchParams(location.search).has("dist");
+        const { monitor } = await import(useDist ? "./dist/foops.esm.js" : "./scripts/lib/index.js");
+        document.getElementById("lib-source").textContent = useDist ? "dist/foops.esm.js" : "source";
+
+        const $ = (id) => document.getElementById(id);
+        const HERO = {
+            multiple: { text: "Multiple displays detected", state: "yes" },
+            single: { text: "Single display", state: "no" },
+            unknown: { text: "Unknown", state: "unknown" }
+        };
+        let session = null;
+
+        const time = (t) => new Date(t).toLocaleTimeString();
+        const pad = (s, n) => String(s).padEnd(n);
+
+        function render(report) {
+            const hero = HERO[report.verdict] || HERO.unknown;
+            $("hero-verdict").textContent = hero.text;
+            $("hero-verdict").className = "hero-verdict " + hero.state;
+            $("hero-count").innerHTML = `${report.timeline.length}<small>timeline entries</small>`;
+
+            $("out-signals").textContent = Object.values(report.signals)
+                .map((s) => `${pad(s.id, 22)}${pad(s.kind, 11)}${s.supported ? s.outcome + (s.strength ? ` (${s.strength})` : "") : "unsupported"}`)
+                .join("\n");
+            $("out-timeline").textContent = report.timeline
+                .map((e) => `${time(e.t)}  ${pad(e.id, 22)}${e.supported === false ? "unsupported" : e.outcome}`)
+                .join("\n");
+            $("out-report").textContent = JSON.stringify(report, null, 2);
+        }
+
+        function setState(state) {
+            const running = state === "running";
+            $("badge-session").className = "badge " + (running ? "yes" : "unknown");
+            $("badge-session").textContent = state;
+            $("btn-start").disabled = running;
+            $("btn-stop").disabled = !running;
+            $("btn-reset").disabled = !running;
+            $("btn-details").disabled = !running;
+            $("hero-sub").textContent = running
+                ? "Live: updates as the session sees changes."
+                : "Stopped: this is the final report.";
+        }
+
+        $("btn-start").addEventListener("click", async () => {
+            session = monitor.createSession();
+            session.on("update", render);
+            setState("running");
+            render(await session.start());
+        });
+
+        $("btn-stop").addEventListener("click", () => {
+            render(session.stop());
+            setState("stopped");
+        });
+
+        $("btn-reset").addEventListener("click", () => {
+            session.reset();
+            render(session.report());
+        });
+
+        $("btn-details").addEventListener("click", async () => {
+            $("btn-details").disabled = true;
+            try {
+                render(await session.screenDetails());
+            } finally {
+                $("btn-details").disabled = session.state !== "running";
+            }
+        });
+    </script>
+
+    </body>
+</html>

@@ -218,7 +218,8 @@ npm run dev     # serves the repo root at http://127.0.0.1:8000/
 ```
 
 `npm run dev` (or any static server on the repo root) serves:
-- `index.html` is the library demo; add `?dist` to load the built bundle.
+- `index.html`, `docs.html` and `examples.html` are the project site.
+- `lib-test.html` is the library demo; add `?dist` to load the built bundle.
 - `monitor.html`, `webcam.html` and `mic.html` are the detector playgrounds.
 - `test/hosts/wrapped.html` runs foops next to zone.js- and Sentry-style
   wrappers.
